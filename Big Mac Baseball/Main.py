@@ -1,8 +1,12 @@
 from Classes import *
 import sys
 
-TheNationals = Team("Washington Nationals")
 
+
+
+"""
+
+HISTORIAL METHOD OF PRODUCING PLAYERS
 
 p1 = Player('Bryce Harper', TheNationals, 'LF', 413, range(611, 995), range(335, 468), range(468, 473,), range(473, 611), range(1, 335), range(995, 1001), range(1, 348),  range (402, 1001), range (348, 402))
 p2 = Player('Matt Weiters', TheNationals,'TBC', 288, range(507, 993), range(284, 433), range(1002,1003), range(433, 507), range(1, 284), range(993, 1001), range(716, 1001), range(42, 716), range(1, 42))
@@ -14,20 +18,6 @@ p7 = Player('Jason Werth', TheNationals, 'TBC', 322, range(602, 989), range(376,
 p8 = Player('Michael Taylor', TheNationals, 'TBC,', 320, range(536, 993), range(210, 377), range(377, 399), range(399, 536), range(1, 210), range(993, 1001), range(534, 1001), range(10, 534), range(1, 10))
 p9 = Player('Wilmer Difo', TheNationals, 'TBC', 319, range(374, 991), range(209, 296), range(296, 330), range(330, 374), range(1, 209), range(991, 1001), range(704, 1001), range(28, 704), range(1, 28))
 p10 = Player('Adam Lind', TheNationals, 'TBC', 362, range(514, 1001), range(257, 385), range(1002, 1003), range(385, 514), range(1, 257), range(1003, 1004), range(755, 1001), range(31, 755), range(1, 31))
-
-TheNationals.Players = [p1,
-						p2,
-						p3,
-						p4,
-						p5,
-						p6,
-						p7,
-						p8,
-						p9]
-
-
-TheMets = Team("New York Mets")
-
 p11 = Player("Travis d'Arnoud", TheMets, 'TBC', 293, range(536, 982), range(209, 382), range(382, 391), range(391, 536), range(1, 209), range(982, 1001), range(778, 1001), range(45, 778), range(1, 45))
 p12 = Player('Lucas Duda', TheMets, 'TBC', 347, range(743, 980), range(366, 574), range(1002, 1003), range(574, 743), range(1, 366), range(980, 1001), range(616, 1000), range(32, 616), range(1, 32))
 p13 = Player('Neil Walker', TheMets, 'TBC', 339, range(515, 960), range(267, 396), range(396, 416), range(416, 515), range(1, 267), range(960, 1001), range(763, 1001), range(20, 763), range(1, 20))
@@ -40,25 +30,45 @@ p19 = Player('Asdrubal Carbrera', TheMets, 'TBC', 351, range(508, 974), range(26
 p20 = Player('Michael Conforto', TheMets, 'TBC', 384, range(621, 953), range(337, 456), range(456, 462), range(462, 621), range(1, 337), range(953, 1001), range(583, 1001), range(11, 583), range(1, 11))
 
 
+"""
 
-TheMets.Players = [p11,
-					p12,
-					p13,
-					p14,
-					p15,
-					p16,
-					p17,
-					p18,
-					p19,
-					p20]
+TheNationals = Team("Washington Nationals")
+TheMets = Team("New York Mets")
 
-b1 = Base('The Plate')
-b2 = Base('Base 1')
-b3 = Base('Base 2')
-b4 = Base('Base 3')
+Factory = PlayerFactory()
 
-Bases = [b1,b2,b3,b4]
+print('Loading Washington Nationals...')
+
+p1 = Factory.GetPlayer('Matt Wieters', TheNationals,  'TBC')
+p2 = Factory.GetPlayer('Ryan Zimmerman', TheNationals,  'TBC')
+p3 = Factory.GetPlayer('Daniel Murphy', TheNationals,  'TBC')
+p4 = Factory.GetPlayer('Trea Turner', TheNationals,  'TBC')
+p5 = Factory.GetPlayer('Anthony Rendon', TheNationals,  'TBC')
+p6 = Factory.GetPlayer('Jayson Werth', TheNationals,  'TBC')
+p7 = Factory.GetPlayer('Michael Taylor', TheNationals,  'TBC')
+p8 = Factory.GetPlayer('Bryce Harper', TheNationals,  'TBC')
+p9 = Factory.GetPlayer('Wilmer Difo', TheNationals,  'TBC')
+p10 = Factory.GetPlayer('Adam Lind', TheNationals,  'TBC')
+
+print('Loading New York Mets...')
+
+p11 = Factory.GetPlayer("Travis d'Arnoud",  TheMets,  'TBC')
+p12 = Factory.GetPlayer('Lucas Duda',  TheMets,  'TBC')
+p13 = Factory.GetPlayer('Neil Walker',  TheMets,  'TBC')
+p14 = Factory.GetPlayer('Jose Reyes',  TheMets,  'TBC')
+p15 = Factory.GetPlayer('Wilmer Flores',  TheMets,  'TBC')
+p16 = Factory.GetPlayer('Yoenis Cespedes',  TheMets,  'TBC')
+p17 = Factory.GetPlayer('Juan Lagares',  TheMets,  'TBC')
+p18 = Factory.GetPlayer('Jay Bruce',  TheMets,  'TBC')
+p19 = Factory.GetPlayer('Asdrubal Carbrera',  TheMets,  'TBC')
+p20 = Factory.GetPlayer('Michael Conforto',  TheMets,  'TBC')
+
+TheNationals.Players = [p1,p2,p3,p4,p5,p6,p7,p8,p9]
+TheMets.Players = [p11,p12,p13,p14,p15,p16,p17,p18,p19,p20]
+
+Bases = [Base('The Plate'),Base('Base 1'),Base('Base 2'),Base('Base 3')]
 
 TheGame = Game(TheNationals, TheMets)
 TheGame.PlayBall(Bases)
 print(sys.path[0])
+

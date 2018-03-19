@@ -1,9 +1,22 @@
 import random
+import xlwings as xw
+
+class GlobalSwitch:
+	DEBUG = False
+
+class Utilities:
+	def Pause():
+		input('Press any key to continue...')
 
 class Base:
 	def __init__(self, name):
 		self.Name = name
 		self.PlayerHere = None
+
+class Stat:
+	def __init__(self, name, range):
+		self.Name = name
+		self.Value = range
 
 class Team:
 	def __init__(self, name):
@@ -14,11 +27,24 @@ class Team:
 		self.OutCount = 0
 		
 	def HalfInning(self, bases):
-		for player in self.Players:
-			player.swing(bases)
-			if(self.OutCount >= 3):
-				ResetBases(bases)
-				return
+		teamIsIn = True
+		while(teamIsIn):
+			for player in self.Players:
+				player.swing(bases)
+				player.PrintBasesStatus(bases)
+				self.PrintScore()
+				Utilities.Pause()
+				if(self.OutCount >= 3):
+					ResetBases(bases)
+					teamIsIn = False
+					return
+
+
+	def PrintScore(self):
+		print('DEBUG: Stats for ' + self.Name + 
+					' Score: ' + str(self.Score) + 
+					' Outs: ' + str(self.OutCount) + 
+					' Total Outs: ' + str(self.AccumulatedOuts))
 
 class Player:
 	def __init__(self, name, myTeam, 
@@ -49,7 +75,8 @@ class Player:
 
 	def swing(self, allBases):
 		swingResult = self.getSwingResult();
-		#print(self.Name + ' using swing(), swingResult = ' + str(swingResult))
+		
+		print(self.Name + ' gets swingResult = ' + str(swingResult))
 		
 		if(swingResult > 0 and swingResult < 4):
 			self.AdjustBases(swingResult, allBases) 
@@ -61,43 +88,50 @@ class Player:
 			self.MyTeam.OutCount += 1
 			self.MyTeam.AccumulatedOuts += 1
 
-		#self.PrintBasesStatus(allBases)
-
 	def getSwingResult(self):
+		
+		result = -1
+		
 		rnd = random.randint(1,1001)
 		#first, determine if assessing on or out ranges
-		if(rnd < self.OBP):
+		
+		
+		if(rnd > self.OBP):
 			playerOBPresult = random.randint(1,1001)
 
 			if(playerOBPresult in self.WalkR): 
-				return 1
+				result = 1
 			elif(playerOBPresult in self.SingleR):
-				return 1
+				result = 1
 			elif(playerOBPresult in self.HBPR):
-				return 1
+				result = 1
 			elif(playerOBPresult in self.DoubleR):
-				return 2
+				result = 2
 			elif(playerOBPresult in self.TripleR):
-				return 3
+				result = 3
 			elif(playerOBPresult in self.HomeRunR):
-				return 4
+				result = 4
 
 		else:
 			playerOutResult = random.randint(1,1001)
 
 			if(playerOutResult in self.SOR): 
-				return 0
+				result =  0
 			elif(playerOutResult in self.FlyGrR):
-				return 0
+				result =  0
 			elif(playerOutResult in self.DPR):
-				return 0
+				result =  0
+		if (result < 0):
+			Utilities.Pause()
+
+		return result
 
 	def PrintBasesStatus(self, allBases):
 		for base in allBases:
 			if(base.PlayerHere != None):
-				print('Name: ' + base.Name + ' Player: ' + base.PlayerHere.Name)
+				print('Name: ' + base.Name + '\t Player: ' + base.PlayerHere.Name)
 			else:
-				print('Name: ' + base.Name + ' Player: None')
+				print('Name: ' + base.Name + '\t Player: None')
 
 	def AdjustBases(self, swingResult, allBases):
 		count = 4
@@ -139,10 +173,104 @@ class Pitcher:
 		self.Name = name
 		self.ERA = era
 
-	def Pitch(self):
+	#def Pitch(self):
 		# TO DO
 		# needs to modify the Players OBP value
 		# based on the ERA
+
+class PlayerFactory:
+	def __init__(self):
+		self.PlayerDBPath = './OnBaseRangeCalculator.xlsm'
+		self.wb = None
+		self.ws = None
+		
+	def GetPlayer(self, NameToFind, InTeam, Position):
+		'''
+		Player def __init__(self, name, myTeam, 
+								position, OBP, SingleR, 
+								DoubleR, TripleR, HomeRunR, 
+								WalkR, HBPR, SOR, FlyGrR, DPR):
+		'''
+		
+		
+		self.wb = xw.books.open(self.PlayerDBPath)
+		self.ws = self.wb.sheets['Results']
+
+		targetRow = self.FindPlayer(NameToFind)
+
+		# start with the ints from the model
+		iWalk = self.GetValue("F", targetRow)
+		iDouble = self.GetValue("G", targetRow)
+		iTriple = self.GetValue("H", targetRow)
+		iHomeRun = self.GetValue("I", targetRow)
+		iSingle = self.GetValue("J", targetRow)
+		iHBP = self.GetValue("K", targetRow)
+
+		iOBP = self.GetValue("L", targetRow)
+
+		iSO = self.GetValue("Q", targetRow)
+		iFlyOut = self.GetValue("P", targetRow)
+		iDoublePlay = self.GetValue("O", targetRow)
+
+		# convert to ranges
+		rWalk = self.GenerateRange(1, iWalk)
+		rDouble = self.GenerateRange(iWalk + 1, iDouble)
+		rTriple = self.GenerateRange(iDouble + 1, iTriple)
+		rHomeRun = self.GenerateRange(iTriple + 1, iHomeRun)
+		rSingle = self.GenerateRange(iHomeRun + 1, iSingle)
+		rHBP = self.GenerateRange(iSingle + 1, iHBP)
+
+		rDoublePlay = self.GenerateRange(1, iDoublePlay)
+		rFlyOut = self.GenerateRange(iDoublePlay + 1, iFlyOut)
+		rSO = self.GenerateRange(iFlyOut + 1, iSO)
+
+		tempPlayer = Player(NameToFind, 
+							  InTeam, 
+							  Position, 
+							  iOBP, 
+							  rSingle, 
+							  rDouble, 
+							  rTriple, 
+							  rHomeRun, 
+							  rWalk, 
+							  rHBP,
+							  rSO,
+							  rFlyOut,
+							  rDoublePlay)
+		self.DEBUG_PrintNewPlayer(tempPlayer)
+		return tempPlayer
+
+	def DEBUG_PrintNewPlayer(self, player: Player):
+		if(GlobalSwitch.DEBUG == True):
+			print('DEBUG: New player made: ')
+			print('DEBUG: Name: \t' + player.Name)
+			print('DEBUG: OBP: \t' + str(player.OBP))
+			print('DEBUG: Single: \t' + str(player.SingleR))
+			print('DEBUG: Double: \t' + str(player.DoubleR))
+			print('DEBUG: Triple: \t' + str(player.TripleR))
+			print('DEBUG: HR: \t' + str(player.HomeRunR))
+			print('DEBUG: Walk: \t' + str(player.WalkR))
+			print('DEBUG: HBP: \t' + str(player.HBPR))
+			print('DEBUG: SO: \t' + str(player.SOR))
+			print('DEBUG: FO: \t' + str(player.FlyGrR))
+			print('DEBUG: DP: \t' + str(player.DPR))
+
+	def GenerateRange(self, lower,upper):
+		if(lower > upper):
+			return range(upper, upper)
+		else:
+			return range(lower,upper)
+
+	def GetValue(self, column, row):
+		return int(self.ws.range(column + str(row)).value)
+
+	def FindPlayer(self, name):
+		# get last row of data in column A
+		lr = self.ws.range('A65550').end(xw.constants.Direction.xlUp).row
+		for r in range(2,lr + 1):
+			if(self.ws.range('A' + str(r)).value == name):
+				return r
+
 
 class Game:
 	def __init__(self, team1, team2):
@@ -154,18 +282,16 @@ class Game:
 		for i in range(1,28):
 			self.CurrentInning = i
 			self.Team1.HalfInning(bases)
+			self.Team1.OutCount = 0
 			self.Team2.HalfInning(bases)
+			self.Team2.OutCount = 0
 			self.PrintCurrentResults()
+			Utilities.Pause()
 
 	def PrintCurrentResults(self):
-		print('Results after inning ' + str(self.CurrentInning) + ':')
-		print('\n')
-		print('\tName: ' + self.Team1.Name)
-		print('\tScore: ' + str(self.Team1.Score))
-		print('\n')
-		print('\tName: ' + self.Team2.Name)
-		print('\tScore: ' + str(self.Team2.Score))
-		print('\n')
+		print('Inning ' + str(self.CurrentInning) + ': ' 
+				+ self.Team1.Name + " " + str(self.Team1.Score)
+				+ self.Team2.Name + " " + str(self.Team2.Score))
 	
 # general utility function
 def ResetBases(bases):
